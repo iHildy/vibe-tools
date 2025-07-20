@@ -11,6 +11,7 @@ interface ReviewComment {
   user: { login: string };
   created_at: string;
   html_url: string;
+  state?: 'PENDING' | 'SUBMITTED' | 'RESOLVED';
 }
 
 export class PrCommand implements Command {
@@ -92,6 +93,12 @@ export class PrCommand implements Command {
 
     const prNumber = parseInt(query, 10);
 
+    // Determine what sections to show based on flags
+    const showReviews = !options?.discussionOnly && !options?.metadataOnly;
+    const showDiscussion = !options?.reviewOnly && !options?.metadataOnly;
+    const showMetadata = !options?.reviewOnly && !options?.discussionOnly;
+    const showLinks = !options?.noLinks;
+
     let url: string;
     if (isNaN(prNumber)) {
       url = `https://api.github.com/repos/${owner}/${repo}/pulls?state=open&sort=created&direction=desc&per_page=10`;
@@ -128,70 +135,96 @@ export class PrCommand implements Command {
           return;
         }
         for (const pr of data) {
-          yield `#${pr.number}: ${pr.title} by ${pr.user.login} (${pr.html_url})\n`;
+          const linkText = showLinks ? ` (${pr.html_url})` : '';
+          yield `#${pr.number}: ${pr.title} by ${pr.user.login}${linkText}\n`;
         }
       } else {
         // Single PR with full discussion
         const pr = data;
 
-        // PR header
+        // PR header (always shown for context)
         yield `#${pr.number}: ${pr.title}\n`;
         yield `State: ${pr.state}\n`;
-        yield `URL: ${pr.html_url}\n\n`;
-
-        // Original post
-        yield `## Pull Request\n`;
-        yield `**@${pr.user.login}** opened this pull request on ${this.formatDate(pr.created_at)}\n\n`;
-        yield `${pr.body || 'No description provided.'}\n\n`;
-
-        // PR metadata
-        yield `Branch: \`${pr.head.ref}\` → \`${pr.base.ref}\`\n`;
-        yield `Commits: ${pr.commits}\n`;
-        yield `Changed files: ${pr.changed_files || 'N/A'}\n`;
-        yield `+${pr.additions} -${pr.deletions}\n\n`;
-
-        // Review comments (comments on code)
-        const reviewComments = await this.fetchReviewComments(owner, repo, prNumber);
-        if (reviewComments.length > 0) {
-          yield `## Code Review Comments (${reviewComments.length} comments)\n`;
-          const groupedComments = this.groupReviewCommentsByFile(reviewComments);
-
-          for (const [file, comments] of groupedComments) {
-            yield `\n### ${file}\n`;
-            for (const comment of comments) {
-              yield `\n---\n`;
-              yield `**@${comment.user.login}** commented${comment.line ? ` on line ${comment.line}` : ''} on ${this.formatDate(comment.created_at)}\n`;
-              yield `${comment.body}\n`;
-              yield `[View in GitHub](${comment.html_url})\n`;
-            }
-          }
+        if (showLinks) {
+          yield `URL: ${pr.html_url}\n\n`;
+        } else {
           yield '\n';
         }
 
-        // Discussion comments
-        const comments = await this.fetchComments(owner, repo, prNumber);
-        if (comments.length > 0) {
-          yield `## Discussion (${comments.length} comments)\n`;
-          for (const comment of comments) {
-            yield `\n---\n`;
-            yield `**@${comment.user.login}** commented on ${this.formatDate(comment.created_at)}\n\n`;
-            yield `${comment.body || 'No content'}\n`;
+        // Original post (always shown for context unless metadata-only)
+        if (!options?.metadataOnly) {
+          yield `## Pull Request\n`;
+          yield `**@${pr.user.login}** opened this pull request on ${this.formatDate(pr.created_at)}\n\n`;
+          yield `${pr.body || 'No description provided.'}\n\n`;
+        }
+
+        // PR basic info (always shown unless review-only or discussion-only)
+        if (showMetadata) {
+          yield `Branch: \`${pr.head.ref}\` → \`${pr.base.ref}\`\n`;
+          yield `Commits: ${pr.commits}\n`;
+          yield `Changed files: ${pr.changed_files || 'N/A'}\n`;
+          yield `+${pr.additions} -${pr.deletions}\n\n`;
+        }
+
+        // Review comments (comments on code)
+        if (showReviews) {
+          const reviewComments = await this.fetchReviewComments(owner, repo, prNumber);
+          let filteredReviewComments = reviewComments;
+
+          // Filter out resolved comments if requested
+          if (options?.hideResolved) {
+            filteredReviewComments = reviewComments.filter(
+              (comment) => comment.state !== 'RESOLVED'
+            );
           }
-        } else {
-          yield `\nNo discussion comments yet.\n`;
+
+          if (filteredReviewComments.length > 0) {
+            yield `## Code Review Comments (${filteredReviewComments.length} comments)\n`;
+            const groupedComments = this.groupReviewCommentsByFile(filteredReviewComments);
+
+            for (const [file, comments] of groupedComments) {
+              yield `\n### ${file}\n`;
+              for (const comment of comments) {
+                yield `\n---\n`;
+                yield `**@${comment.user.login}** commented${comment.line ? ` on line ${comment.line}` : ''} on ${this.formatDate(comment.created_at)}\n`;
+                yield `${comment.body}\n`;
+                if (showLinks) {
+                  yield `[View in GitHub](${comment.html_url})\n`;
+                }
+              }
+            }
+            yield '\n';
+          }
+        }
+
+        // Discussion comments
+        if (showDiscussion) {
+          const comments = await this.fetchComments(owner, repo, prNumber);
+          if (comments.length > 0) {
+            yield `## Discussion (${comments.length} comments)\n`;
+            for (const comment of comments) {
+              yield `\n---\n`;
+              yield `**@${comment.user.login}** commented on ${this.formatDate(comment.created_at)}\n\n`;
+              yield `${comment.body || 'No content'}\n`;
+            }
+          } else {
+            yield `\nNo discussion comments yet.\n`;
+          }
         }
 
         // Additional PR metadata
-        yield `\n---\n`;
-        yield `Labels: ${pr.labels.map((l: any) => l.name).join(', ') || 'None'}\n`;
-        if (pr.assignees?.length > 0) {
-          yield `Assignees: ${pr.assignees.map((a: any) => '@' + a.login).join(', ')}\n`;
-        }
-        if (pr.milestone) {
-          yield `Milestone: ${pr.milestone.title}\n`;
-        }
-        if (pr.requested_reviewers?.length > 0) {
-          yield `Requested Reviewers: ${pr.requested_reviewers.map((r: any) => '@' + r.login).join(', ')}\n`;
+        if (showMetadata) {
+          yield `\n---\n`;
+          yield `Labels: ${pr.labels.map((l: any) => l.name).join(', ') || 'None'}\n`;
+          if (pr.assignees?.length > 0) {
+            yield `Assignees: ${pr.assignees.map((a: any) => '@' + a.login).join(', ')}\n`;
+          }
+          if (pr.milestone) {
+            yield `Milestone: ${pr.milestone.title}\n`;
+          }
+          if (pr.requested_reviewers?.length > 0) {
+            yield `Requested Reviewers: ${pr.requested_reviewers.map((r: any) => '@' + r.login).join(', ')}\n`;
+          }
         }
       }
     } catch (error) {

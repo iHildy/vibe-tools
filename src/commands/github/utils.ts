@@ -4,6 +4,11 @@ import type { CommandOptions } from '../../types';
 export interface GithubOptions extends CommandOptions {
   repo?: string;
   fromGithub?: string;
+  reviewOnly?: boolean;
+  discussionOnly?: boolean;
+  metadataOnly?: boolean;
+  noLinks?: boolean;
+  hideResolved?: boolean;
 }
 
 export interface RepoContext {
