@@ -189,5 +189,5 @@ If people say "ask Gemini" or "ask Perplexity" or "ask Stagehand" they mean to u
 
 **Authentication and API Keys**: vibe-tools automatically loads API keys from ~/.vibe-tools/.env files, environment variables, and Doppler secrets when running in a folder that has a doppler project configured. Disable Doppler loading by adding `"disableDoppler": true` to `vibe-tools.config.json`. 
 
-<!-- vibe-tools-version: 0.63.0 -->
+<!-- vibe-tools-version: 0.63.1 -->
 </vibe-tools Integration>
