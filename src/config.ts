@@ -198,7 +198,9 @@ function _loadEnv(): void {
     hasDoppler = false;
   }
   if (!hasDoppler) {
-    console.log('[Doppler] Skipped: CLI not found on PATH');
+    console.log(
+      '[Doppler] Skipped: CLI not found on PATH - Check if Doppler CLI is installed with `doppler --version`'
+    );
     return;
   }
 

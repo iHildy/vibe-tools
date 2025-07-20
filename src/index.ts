@@ -147,7 +147,12 @@ type CLIBooleanOption =
   | 'webSearch'
   | 'withDiff'
   | 'copyDefaultProfile'
-  | 'lite';
+  | 'lite'
+  | 'reviewOnly'
+  | 'discussionOnly'
+  | 'metadataOnly'
+  | 'noLinks'
+  | 'hideResolved';
 
 // Main CLI options interface
 interface CLIOptions {
@@ -208,6 +213,13 @@ interface CLIOptions {
   // Git diff options
   withDiff?: boolean;
   base?: string;
+
+  // GitHub PR/Issue options
+  reviewOnly?: boolean;
+  discussionOnly?: boolean;
+  metadataOnly?: boolean;
+  noLinks?: boolean;
+  hideResolved?: boolean;
 }
 
 type CLIOptionKey = CLIStringOption | CLINumberOption | CLIBooleanOption;
@@ -271,6 +283,13 @@ const OPTION_KEYS: Record<string, CLIOptionKey> = {
   // Git diff options
   withdiff: 'withDiff',
   base: 'base',
+
+  // GitHub PR/Issue options
+  reviewonly: 'reviewOnly',
+  discussiononly: 'discussionOnly',
+  metadataonly: 'metadataOnly',
+  nolinks: 'noLinks',
+  hideresolved: 'hideResolved',
 };
 
 // Set of option keys that are boolean flags
@@ -286,6 +305,11 @@ const BOOLEAN_OPTIONS = new Set<CLIBooleanOption>([
   'withDiff',
   'copyDefaultProfile',
   'lite',
+  'reviewOnly',
+  'discussionOnly',
+  'metadataOnly',
+  'noLinks',
+  'hideResolved',
 ]);
 
 // Set of option keys that require numeric values
@@ -429,6 +453,12 @@ async function main() {
     // Git diff options
     withDiff: undefined,
     base: undefined,
+    // GitHub PR/Issue options
+    reviewOnly: undefined,
+    discussionOnly: undefined,
+    metadataOnly: undefined,
+    noLinks: undefined,
+    hideResolved: undefined,
   };
   const queryArgs: string[] = [];
 

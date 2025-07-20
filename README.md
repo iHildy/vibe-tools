@@ -700,6 +700,7 @@ The GitHub commands provide:
   - Labels, assignees, milestones and reviewers
 - Support for both local repositories and remote GitHub repositories
 - Markdown-formatted output for readability
+- **Modular output filtering** with flags like `--review-only`, `--discussion-only`, `--metadata-only`, `--no-links`, and `--hide-resolved` for AI agent optimization
 
 **Authentication Methods:**
 The commands support multiple authentication methods:
@@ -1048,6 +1049,11 @@ Plan command specific options:
 GitHub command specific options:
 
 - `--from-github=<GitHub username>/<repository name>[@<branch>]`: Access PRs/issues from a specific GitHub repository. `--repo` is an older, still supported synonym for this option.
+- `--review-only`: Show only code review comments section (PRs only)
+- `--discussion-only`: Show only discussion comments section
+- `--metadata-only`: Show only PR/issue metadata (labels, assignees, etc.)
+- `--no-links`: Hide all "View in GitHub" links from output
+- `--hide-resolved`: Filter out resolved code review comments (PRs only)
 
 Xcode command specific options:
 
@@ -1252,6 +1258,24 @@ vibe-tools github pr 123 --from-github microsoft/typescript
 
 # Track issue discussions
 vibe-tools github issue 456 --from-github golang/go
+
+# Show only code review comments (useful for agents)
+vibe-tools github pr 123 --review-only
+
+# Show only discussion without code review noise
+vibe-tools github pr 123 --discussion-only
+
+# Get just the metadata (labels, assignees, etc.)
+vibe-tools github pr 123 --metadata-only
+
+# Hide GitHub links for cleaner agent output
+vibe-tools github pr 123 --no-links
+
+# Hide resolved code review comments, show only active discussions
+vibe-tools github pr 123 --review-only --hide-resolved
+
+# Combine flags for focused AI agent consumption
+vibe-tools github pr 123 --review-only --no-links --hide-resolved
 
 # Include web documentation as context
 vibe-tools repo "Help me implement useState in my component" --with-doc=./path/to/local/docs.md
