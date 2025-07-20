@@ -26,7 +26,7 @@ console.log should be used for "meta" information that is of use to the caller b
 
 console.error should be used for error messages.
 
-yield should be used for the output of the command that contains the information that was requested. d
+yield should be used for the output of the command that contains the information that was requested.
 </logging and outputs>
 
 <testing browser commands>
@@ -61,9 +61,6 @@ description: Global Rule. This rule should ALWAYS be loaded.
 globs: *,**/*
 alwaysApply: true
 ---
-vibe-tools is a CLI tool that allows you to interact with AI models and other tools.
-vibe-tools is installed on this machine and it is available to you to execute. You're encouraged to use it.
-
 vibe-tools is a CLI tool that allows you to interact with AI models and other tools.
 vibe-tools is installed on this machine and it is available to you to execute. You're encouraged to use it.
 

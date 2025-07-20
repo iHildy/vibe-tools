@@ -56,6 +56,13 @@ export interface CommandOptions {
   // Git diff options
   withDiff?: boolean; // Include git diff in repository analysis
   base?: string; // Base branch for diff comparison (default: main)
+
+  // GitHub PR/Issue options
+  reviewOnly?: boolean; // Show only code review comments
+  discussionOnly?: boolean; // Show only discussion comments
+  metadataOnly?: boolean; // Show only PR metadata
+  noLinks?: boolean; // Hide GitHub view links
+  hideResolved?: boolean; // Filter out resolved review comments
 }
 
 export interface Command {

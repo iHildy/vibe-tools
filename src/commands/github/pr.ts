@@ -194,6 +194,12 @@ export class PrCommand implements Command {
               }
             }
             yield '\n';
+          } else {
+            if (reviewComments.length > 0 && options?.hideResolved) {
+              yield `\nNo unresolved code review comments.\n`;
+            } else {
+              yield `\nNo code review comments yet.\n`;
+            }
           }
         }
 
@@ -215,15 +221,15 @@ export class PrCommand implements Command {
         // Additional PR metadata
         if (showMetadata) {
           yield `\n---\n`;
-          yield `Labels: ${pr.labels.map((l: any) => l.name).join(', ') || 'None'}\n`;
+          yield `Labels: ${pr.labels.map((l: { name: string }) => l.name).join(', ') || 'None'}\n`;
           if (pr.assignees?.length > 0) {
-            yield `Assignees: ${pr.assignees.map((a: any) => '@' + a.login).join(', ')}\n`;
+            yield `Assignees: ${pr.assignees.map((a: { login: string }) => '@' + a.login).join(', ')}\n`;
           }
           if (pr.milestone) {
             yield `Milestone: ${pr.milestone.title}\n`;
           }
           if (pr.requested_reviewers?.length > 0) {
-            yield `Requested Reviewers: ${pr.requested_reviewers.map((r: any) => '@' + r.login).join(', ')}\n`;
+            yield `Requested Reviewers: ${pr.requested_reviewers.map((r: { login: string }) => '@' + r.login).join(', ')}\n`;
           }
         }
       }

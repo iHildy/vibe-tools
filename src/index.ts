@@ -453,6 +453,12 @@ async function main() {
     // Git diff options
     withDiff: undefined,
     base: undefined,
+    // GitHub PR/Issue options
+    reviewOnly: undefined,
+    discussionOnly: undefined,
+    metadataOnly: undefined,
+    noLinks: undefined,
+    hideResolved: undefined,
   };
   const queryArgs: string[] = [];
 
